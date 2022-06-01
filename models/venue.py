@@ -15,4 +15,5 @@ class Venue(db.Model):
     genres = db.Column(db.String)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website_link = db.Column(db.String)
     event = db.relationship('Show', backref='venue', cascade="all, delete")
