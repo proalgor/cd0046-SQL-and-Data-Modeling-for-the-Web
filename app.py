@@ -14,8 +14,8 @@ from forms import *
 from helpers.filters import format_datetime
 from flask_migrate import Migrate
 from helpers.connection import db
-from models.artist import Artist
-from models.venue import Venue
+from models.Artist import Artist
+from models.Venue import Venue
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
