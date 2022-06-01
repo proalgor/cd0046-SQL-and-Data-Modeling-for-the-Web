@@ -1,4 +1,5 @@
 from helpers.connection import db
+from models import *
 
 class Venue(db.Model):
     __tablename__ = 'venue'
@@ -11,7 +12,7 @@ class Venue(db.Model):
     phone = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean())
     seeking_description = db.Column(db.String, nullable=True)
+    genre = db.Column(db.String)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    event = db.relationship('Show', backref='venue', cascade="all, delete")

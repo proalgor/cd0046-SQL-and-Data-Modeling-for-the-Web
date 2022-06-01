@@ -4,7 +4,7 @@
 
 import json
 from wsgiref.handlers import format_date_time
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, session, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -13,9 +13,11 @@ from flask_wtf import Form
 from forms import *
 from helpers.filters import format_datetime
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
 from helpers.connection import db
 from models.Artist import Artist
 from models.Venue import Venue
+from models.Show import Show
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -24,6 +26,7 @@ app = Flask(__name__, instance_relative_config=True)
 moment = Moment(app)
 app.config.from_object('config')
 app.config.from_pyfile('config.py')
+csrf = CSRFProtect(app)
 db.init_app(app)
 
 migrate = Migrate(app, db)

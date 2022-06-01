@@ -1,6 +1,4 @@
 from helpers.connection import db
-from models.Show import Show
-
 class Artist(db.Model):
     __tablename__ = 'artist'
 
@@ -14,4 +12,4 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean())
     seeking_description = db.Column(db.String, nullable=True)
-    events = db.relationship('Venue', secondary=Show, backref=db.backref('events', lazy=True))
+    events = db.relationship('Show', backref='artist', cascade="all, delete")
