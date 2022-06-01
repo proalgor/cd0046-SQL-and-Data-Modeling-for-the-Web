@@ -3,6 +3,7 @@
 #----------------------------------------------------------------------------#
 
 import json
+import sys
 from unicodedata import name
 from wsgiref.handlers import format_date_time
 from flask import Flask, render_template, request, Response, flash, redirect, session, url_for
@@ -407,14 +408,40 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-  # called upon submitting the new artist listing form
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
+  form = ArtistForm()
+  error = False
+  try:
+    if form.validate_on_submit():
+      # convert the genre to string
+      genreString = ','.join(str(x) for x in form.data['genres'])
+      artist = Artist(
+        name = form.data['name'],
+        city = form.data['city'],
+        state = form.data['state'], 
+        phone = form.data['phone'],
+        image_link = form.data['image_link'],
+        genres = genreString,
+        facebook_link = form.data['facebook_link'],
+        website_link= form.data['website_link'],
+        seeking_venue = form.data['seeking_venue'],
+        seeking_description = form.data['seeking_description'],
+      )
+      db.session.add(artist)
+      db.session.commit()
+    else:
+      flash('An error occurred. Artist' + request.form['name'] + ' could not be listed. error = '+ str(form.errors))
+      return render_template('forms/new_artist.html', form = form)
+  except Exception as e:
+    db.session.rollback() 
+    error = True
+  finally:
+    db.session.close()
+  if  error == True:
+    flash('Internal error' + request.form['name'] + 'could not be listed ')
+    return render_template('pages/home.html')
 
-  # on successful db insert, flash success
+  # Return success if there is no error
   flash('Artist ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
   return render_template('pages/home.html')
 
 
