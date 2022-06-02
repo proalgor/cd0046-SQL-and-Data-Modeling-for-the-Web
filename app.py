@@ -60,45 +60,47 @@ def index():
 
 @app.route('/venues')
 def venues():
-  # TODO: replace with real venues data.
   #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  return render_template('pages/venues.html', areas=data);
+  venues = db.session.query(Venue.id, Venue.name, Venue.state, Venue.city).all()
+  time_now = datetime.now().isoformat()
+  agg_venue = {}
+  for venue in venues:
+    if not agg_venue.get(venue.city):
+      agg_venue[venue.city] = {
+        'city': venue.city,
+        'state': venue.state,
+        'venues':[{
+          'id': venue.id,
+          'name': venue.name,
+          'num_upcoming_shows': db.session.query(Show.id).filter(Show.artist_id == venue.id, Show.start_time > time_now).count()
+        }]
+      }
+      continue
+    agg_venue[venue.city]['venues'].append({
+        'id': venue.id,
+        'name': venue.name,
+        'num_upcoming_shows': db.session.query(Show.id).filter(Show.artist_id == venue.id, Show.start_time > time_now).count()
+    })
+
+  return render_template('pages/venues.html', areas=agg_venue.values());
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for Hop should return "The Musical Hop".
-  # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+  search_q=request.form.get('search_term', '')
+  time_now = datetime.now().isoformat()
+  venue = db.session.query(Venue.id, Venue.name).filter(Venue.name.ilike(f'%{search_q}%')).all()
+  response = {
+    "count":0,
+    "data":[]
   }
-  return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
+  for venue in venues:
+    response["count"] += 1
+    response["data"].append({
+      'id': venue.id,
+      'name': venue.name,
+      'num_upcoming_shows': db.session.query(Show.id).filter(Show.artist_id == venue.id, Show.start_time > time_now).count()
+    })
+  return render_template('pages/search_venues.html', results=response, search_term=search_q)
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
@@ -264,7 +266,7 @@ def search_artists():
     response["data"].append({
       'id': artist.id,
       'name': artist.name,
-      'num_upcoming_shows': db.session.query(func.count(Show.id)).filter(Show.artist_id == artist.id, Show.start_time > time_now).count()
+      'num_upcoming_shows': db.session.query(Show.id).filter(Show.artist_id == artist.id, Show.start_time > time_now).count()
     })
   return render_template('pages/search_artists.html', results=response, search_term=search_q)
 
