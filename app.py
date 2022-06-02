@@ -265,9 +265,8 @@ def edit_artist(artist_id):
   if not artist:
     flash('Artist with id '+ str(artist_id) + ' does not exist')
     return render_template('pages/home.html')
-  dictObj = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
   # get the dictionary rep of the venue obj
-  artistDict = dictObj(artist)
+  artistDict = get_entity_dict(artist)
   #set the genres back to array
   artistDict['genres'] = artistDict["genres"].split(',')
   form = ArtistForm(data = artistDict)
@@ -290,9 +289,8 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   venue = Venue.query.get(venue_id)
-  dictObj = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
   # get the dictionary rep of the venue obj
-  venueDictionary = dictObj(venue)
+  venueDictionary = get_entity_dict(venue)
   #set the genres back to array
   venueDictionary['genres'] = venueDictionary["genres"].split(',')
   form = VenueForm(data = venueDictionary)
