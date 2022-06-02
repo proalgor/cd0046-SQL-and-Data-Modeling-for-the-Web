@@ -9,13 +9,13 @@ from time import time
 from unicodedata import name
 from unittest import removeResult
 from wsgiref.handlers import format_date_time
-from flask import Flask, render_template, request, Response, flash, redirect, session, url_for
+from flask import Flask, jsonify, render_template, request, Response, flash, redirect, session, url_for, abort
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
-from sqlalchemy import Date, func
+from sqlalchemy import Date, func, true
 from forms import *
 from helpers.filters import format_datetime
 from flask_migrate import Migrate
@@ -182,12 +182,23 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-  # TODO: Complete this endpoint for taking a venue_id, and using
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
-
-  # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-  # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+  venue = Venue.query.get(venue_id)
+  error = False
+  if not venue:
+    flash('The venue does not exist')
+    return render_template('pages/home.html')
+  try:
+    db.session.delete(venue)
+    db.session.commit()
+  except:
+    error = True
+    db.rollback()
+  finally:
+    db.close()
+  if error:
+    abort(500)
+  return jsonify({'success': True})
 
 #  Artists
 #  ----------------------------------------------------------------

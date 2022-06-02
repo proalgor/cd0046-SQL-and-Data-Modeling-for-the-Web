@@ -117,6 +117,27 @@
   <script>window.jQuery || document.write('<script type="text/javascript" src="/static/js/libs/jquery-1.11.1.min.js"><\/script>')</script>
   <script type="text/javascript" src="/static/js/libs/bootstrap-3.1.1.min.js" defer></script>
   <script type="text/javascript" src="/static/js/plugins.js" defer></script>
+  <script>
+    deleteVenueBtns = document.querySelectorAll(".delete-venue");
+  
+    for (let i = 0; i < deleteVenueBtns.length; i++) {
+    const deleteBtn = deleteVenueBtns[i];
+    deleteBtn.onclick = function(e) {
+      console.log("Delete event: ", e);
+      const venueId = e.target.dataset.id;
+  
+      fetch('/venues/'+ venueId,{
+      method: 'DELETE'
+      }).then(function() {
+      	window.location.reload(true);
+      })
+      .catch(function(e) {
+      	console.error(e);
+      	document.getElementById("error").className = "";
+      });
+    };
+    }
+  </script>
 
 </body>
 </html>
