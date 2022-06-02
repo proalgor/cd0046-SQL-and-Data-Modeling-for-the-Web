@@ -5,6 +5,7 @@
 import json
 from datetime import datetime
 from re import A
+from time import time
 from unicodedata import name
 from unittest import removeResult
 from wsgiref.handlers import format_date_time
@@ -14,7 +15,7 @@ from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
-from sqlalchemy import Date
+from sqlalchemy import Date, func
 from forms import *
 from helpers.filters import format_datetime
 from flask_migrate import Migrate
@@ -32,7 +33,9 @@ app = Flask(__name__, instance_relative_config=True)
 moment = Moment(app)
 app.config.from_object('config')
 app.config.from_pyfile('config.py')
-csrf = CSRFProtect(app)
+
+#Disabled csrf
+#csrf = CSRFProtect(app)
 db.init_app(app)
 
 migrate = Migrate(app, db)
@@ -242,33 +245,28 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-  # TODO: replace with real data returned from querying the database
-  data=[{
-    "id": 4,
-    "name": "Guns N Petals",
-  }, {
-    "id": 5,
-    "name": "Matt Quevedo",
-  }, {
-    "id": 6,
-    "name": "The Wild Sax Band",
-  }]
+  data = db.session.query(Artist.id, Artist.name).all()
   return render_template('pages/artists.html', artists=data)
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
   # search for "band" should return "The Wild Sax Band".
-  response={
-    "count": 1,
-    "data": [{
-      "id": 4,
-      "name": "Guns N Petals",
-      "num_upcoming_shows": 0,
-    }]
+  search_q=request.form.get('search_term', '')
+  time_now = datetime.now().isoformat()
+  artists = db.session.query(Artist.id, Artist.name).filter(Artist.name.ilike(f'%{search_q}%')).all()
+  response = {
+    "count":0,
+    "data":[]
   }
-  return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
+  for artist in artists:
+    response["count"] += 1
+    response["data"].append({
+      'id': artist.id,
+      'name': artist.name,
+      'num_upcoming_shows': db.session.query(func.count(Show.id)).filter(Show.artist_id == artist.id, Show.start_time > time_now).count()
+    })
+  return render_template('pages/search_artists.html', results=response, search_term=search_q)
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
