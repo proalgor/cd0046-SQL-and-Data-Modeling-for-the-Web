@@ -15,7 +15,7 @@ from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
-from sqlalchemy import Date, func, true
+from sqlalchemy import Date, desc
 from forms import *
 from helpers.filters import format_datetime
 from flask_migrate import Migrate
@@ -51,8 +51,9 @@ app.jinja_env.filters['datetime'] = format_datetime
 
 @app.route('/')
 def index():
-  Venue.query.all()
-  return render_template('pages/home.html')
+  recent_venues=db.session.query(Venue.id, Venue.name).order_by(desc(Venue.id)).limit(2)
+  recent_artists=db.session.query(Artist.id, Artist.name).order_by(desc(Artist.id)).limit(2)
+  return render_template('pages/home.html', venues=recent_venues, artists=recent_artists)
 
 
 #  Venues
