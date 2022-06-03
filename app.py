@@ -73,16 +73,15 @@ def venues():
         'venues':[{
           'id': venue.id,
           'name': venue.name,
-          'num_upcoming_shows': db.session.query(Show.id).filter(Show.artist_id == venue.id, Show.start_time > time_now).count()
+          'num_upcoming_shows': db.session.query(Show.id).join(Venue).filter(Show.venue_id == venue.id, Show.start_time > time_now).count()
         }]
       }
       continue
     agg_venue[venue.city]['venues'].append({
         'id': venue.id,
         'name': venue.name,
-        'num_upcoming_shows': db.session.query(Show.id).filter(Show.artist_id == venue.id, Show.start_time > time_now).count()
+        'num_upcoming_shows': db.session.query(Show.id).join(Venue).filter(Show.venue_id == venue.id, Show.start_time > time_now).count()
     })
-
   return render_template('pages/venues.html', areas=agg_venue.values());
 
 @app.route('/venues/search', methods=['POST'])
@@ -110,20 +109,20 @@ def show_venue(venue_id):
   if not venue:
     flash('The artist does not exist')
     return render_template('pages/home.html')
-  shows = venue.events
-  past_shows = []
-  upcoming_shows = []
-  for show in shows:
-    values = {
-      'artist_id': show.artist.id,
-      'artist_name': show.artist.name,
-      'artist_image_link': show.artist.image_link,
-      'start_time': show.start_time.isoformat()
-    }
-    if show.start_time.isoformat() < datetime.now().isoformat():
-      past_shows.append(values)
-      continue
-    upcoming_shows.append(values) 
+  #shows = venue.events
+  past_shows = db.session.query(Artist.id.label('artist_id'), Artist.name.label('artist_name'), Artist.image_link.label('artist_image_link'), Show.start_time.label('start_time')).join(Show).filter(Show.venue_id == venue_id).filter(Show.start_time < datetime.now()).all()
+  upcoming_shows = db.session.query(Artist.id.label('artist_id'), Artist.name.label('artist_name'), Artist.image_link.label('artist_image_link'), Show.start_time.label('start_time')).join(Show).filter(Show.venue_id == venue_id).filter(Show.start_time > datetime.now()).all()
+  # for show in shows:
+  #   values = {
+  #     'artist_id': show.artist.id,
+  #     'artist_name': show.artist.name,
+  #     'artist_image_link': show.artist.image_link,
+  #     'start_time': show.start_time.isoformat()
+  #   }
+  #   if show.start_time.isoformat() < datetime.now().isoformat():
+  #     past_shows.append(values)
+  #     continue
+  #   upcoming_shows.append(values) 
   venue = get_entity_dict(venue)
   venue['genres'] = venue['genres'].split(',')
   venue['upcoming_shows'] = upcoming_shows
@@ -235,20 +234,20 @@ def show_artist(artist_id):
   if not artist:
     flash('The artist does not exist')
     return render_template('pages/home.html')
-  shows = artist.events
-  past_shows = []
-  upcoming_shows = []
-  for show in shows:
-    values = {
-      'venue_id': show.venue.id,
-      'venue_name': show.venue.name,
-      'venue_image_link': show.venue.image_link,
-      'start_time': show.start_time.isoformat()
-    }
-    if show.start_time.isoformat() < datetime.now().isoformat():
-      past_shows.append(values)
-      continue
-    upcoming_shows.append(values) 
+  # shows = artist.events
+  past_shows = db.session.query(Venue.id.label('venue_id'), Venue.name.label('venue_name'), Venue.image_link.label('venue_image_link'), Show.start_time.label('start_time')).join(Show).filter(Show.artist_id == artist_id).filter(Show.start_time< datetime.now()).all()
+  upcoming_shows = db.session.query(Venue.id.label('venue_id'), Venue.name.label('venue_name'), Venue.image_link.label('venue_image_link'), Show.start_time.label('start_time')).join(Show).filter(Show.artist_id == artist_id).filter(Show.start_time > datetime.now()).all()
+  # for show in shows:
+  #   values = {
+  #     'venue_id': show.venue.id,
+  #     'venue_name': show.venue.name,
+  #     'venue_image_link': show.venue.image_link,
+  #     'start_time': show.start_time.isoformat()
+  #   }
+  #   if show.start_time.isoformat() < datetime.now().isoformat():
+  #     past_shows.append(values)
+  #     continue
+  #   upcoming_shows.append(values) 
   artist = get_entity_dict(artist)
   artist['genres'] = artist['genres'].split(',')
   artist['upcoming_shows'] = upcoming_shows
