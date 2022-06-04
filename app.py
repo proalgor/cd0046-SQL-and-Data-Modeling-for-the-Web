@@ -9,7 +9,18 @@ from time import time
 from unicodedata import name
 from unittest import removeResult
 from wsgiref.handlers import format_date_time
-from flask import Flask, jsonify, render_template, request, Response, flash, redirect, session, url_for, abort
+from flask import (
+  Flask, 
+  jsonify, 
+  render_template, 
+  request, 
+  Response, 
+  flash, 
+  redirect, 
+  session, 
+  url_for, 
+  abort
+)
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -88,7 +99,7 @@ def venues():
 def search_venues():
   search_q=request.form.get('search_term', '')
   time_now = datetime.now().isoformat()
-  venue = db.session.query(Venue.id, Venue.name).filter(Venue.name.ilike(f'%{search_q}%')).all()
+  venues = db.session.query(Venue.id, Venue.name).filter(Venue.name.ilike(f'%{search_q}%')).all()
   response = {
     "count":0,
     "data":[]
